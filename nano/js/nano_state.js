@@ -45,7 +45,9 @@ NanoStateClass.prototype.onBeforeUpdate = function (data) {
 
 NanoStateClass.prototype.onUpdate = function (data) {
     // Do not add code here, add it to the 'default' state (nano_state_defaut.js) or create a new state and override this function
-
+    if(NanoTemplate.hasErrored()){ // The template has errors. Don't spam alerts to the client.
+        return;
+    }
     try
     {
         if (!this.layoutRendered || (data['config'].hasOwnProperty('autoUpdateLayout') && data['config']['autoUpdateLayout']))

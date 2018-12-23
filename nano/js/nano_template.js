@@ -4,20 +4,23 @@ var NanoTemplate = function () {
     var _templateData = {};
 
     var _templates = {};
+    var _templateNames = {}; // For debugging.
     var _compiledTemplates = {};
-	
-	var _helpers = {};
+
+    var _helpers = {};
+
+    var _hasErrored = false;
 
     var init = function () {
         // We store templateData in the body tag, it's as good a place as any
-		_templateData = $('body').data('templateData');
+        _templateData = $('body').data('templateData');
 
-		if (_templateData == null)
-		{
-			alert('Error: Template data did not load correctly.');
-		}
+        if (_templateData == null)
+        {
+            alert('Error: Template data did not load correctly.');
+        }
 
-		loadNextTemplate();
+        loadNextTemplate();
     };
 
     var loadNextTemplate = function () {
@@ -44,7 +47,7 @@ var NanoTemplate = function () {
                     dataType: 'text'
                 }))
                 .done(function(templateMarkup) {
-
+                    _templateNames[key] = _templateData[key]
                     templateMarkup += '<div class="clearBoth"></div>';
 
                     try
@@ -70,14 +73,20 @@ var NanoTemplate = function () {
     }
 
     var compileTemplates = function () {
-
+        var errors = "";
         for (var key in _templates) {
             try {
                 _compiledTemplates[key] = doT.template(_templates[key], null, _templates)
             }
             catch (error) {
-                alert(error.message);
+                errors += 'Compiling sub-template "' + _templateNames[key] + '" for template "' + key + '" resulted in an error.\n' + error.stack + "\n";
             }
+        }
+        if(errors !== ""){
+            alert(errors)
+            return false
+        } else {
+            return true
         }
     };
 
@@ -94,42 +103,50 @@ var NanoTemplate = function () {
         parse: function (templateKey, data) {
             if (!_compiledTemplates.hasOwnProperty(templateKey) || !_compiledTemplates[templateKey]) {
                 if (!_templates.hasOwnProperty(templateKey)) {
+                    _hasErrored = true;
                     alert('ERROR: Template "' + templateKey + '" does not exist in _compiledTemplates!');
                     return '<h2>Template error (does not exist)</h2>';
                 }
-                compileTemplates();
+                if(!compileTemplates()){
+                    _hasErrored = true;
+                    return '<h2>Template error (failed to compile)</h2>';
+                }
             }
             if (typeof _compiledTemplates[templateKey] != 'function') {
-                alert(_compiledTemplates[templateKey]);
-                alert('ERROR: Template "' + templateKey + '" failed to compile!');
+                _hasErrored = true;
+                alert('Compiling template "' + templateKey + '" resulted in something that was not a function, instead it was:\n\n' + _compiledTemplates[templateKey]);
                 return '<h2>Template error (failed to compile)</h2>';
             }
             return _compiledTemplates[templateKey].call(this, data['data'], data['config'], _helpers);
         },
-		addHelper: function (helperName, helperFunction) {
-			if (!jQuery.isFunction(helperFunction)) {
-				alert('NanoTemplate.addHelper failed to add ' + helperName + ' as it is not a function.');
-				return;	
-			}
-			
-			_helpers[helperName] = helperFunction;
-		},
-		addHelpers: function (helpers) {		
-			for (var helperName in helpers) {
-				if (!helpers.hasOwnProperty(helperName))
-				{
-					continue;
-				}
-				NanoTemplate.addHelper(helperName, helpers[helperName]);
-			}
-		},
-		removeHelper: function (helperName) {
-			if (helpers.hasOwnProperty(helperName))
-			{
-				delete _helpers[helperName];
-			}	
-		}
+        addHelper: function (helperName, helperFunction) {
+            if (!jQuery.isFunction(helperFunction)) {
+                alert('NanoTemplate.addHelper failed to add ' + helperName + ' as it is not a function.');
+                return;
+            }
+
+            _helpers[helperName] = helperFunction;
+        },
+        addHelpers: function (helpers) {
+            for (var helperName in helpers) {
+                if (!helpers.hasOwnProperty(helperName))
+                {
+                    continue;
+                }
+                NanoTemplate.addHelper(helperName, helpers[helperName]);
+            }
+        },
+        removeHelper: function (helperName) {
+            if (helpers.hasOwnProperty(helperName))
+            {
+                delete _helpers[helperName];
+            }
+        },
+        get hasErrored() {
+            return _hasErrored;
+        },
+        set hasErrored(newVal) {
+            return _hasErrored = newVal;
+        }
     }
 }();
- 
-
