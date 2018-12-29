@@ -5,6 +5,14 @@
 	icon_state = "pda"
 	icon_state_unpowered = "pda"
 	hardware_flag = PROGRAM_PDA
+	ports_available = list(
+		PORT_CPU = 1,
+		PORT_POWER = 2,
+		PORT_STORAGE = 1,
+		PORT_CARD_READER = 1,
+		PORT_EXPANSION = 3,
+		PORT_EXTERNAL = 2
+	)
 	max_hardware_size = 1
 	w_class = ITEM_SIZE_SMALL
 	light_strength = 2

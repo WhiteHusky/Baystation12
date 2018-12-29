@@ -2250,7 +2250,7 @@ CIRCUITS BELOW
 	sort_string = "VAAAB"
 
 /datum/design/circuit/ntnet_relay
-	name = "NTNet Quantum Relay"
+	name = "DCOMMS DNET Quantum Relay"
 	id = "ntnet_relay"
 	req_tech = list(TECH_DATA = 4)
 	build_path = /obj/item/weapon/circuitboard/ntnet_relay

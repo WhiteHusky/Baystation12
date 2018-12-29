@@ -10,12 +10,13 @@
 	critical = 1
 	malfunction_probability = 1
 	origin_tech = list(TECH_DATA = 3, TECH_ENGINEERING = 2)
-
+	port_type = PORT_CPU
+	base_type = /obj/item/weapon/computer_hardware/processor_unit
 	var/max_idle_programs = 2 // 2 idle, + 1 active = 3 as said in description.
 
 /obj/item/weapon/computer_hardware/processor_unit/small
 	name = "standard microprocessor"
-	desc = "A standard miniaturised CPU used in portable devices. It can run up to two programs simultaneously."
+	desc = "A standard miniaturized CPU used in portable devices. It can run up to two programs simultaneously."
 	icon_state = "cpu_small"
 	hardware_size = 1
 	power_usage = 25
@@ -33,7 +34,7 @@
 
 /obj/item/weapon/computer_hardware/processor_unit/photonic/small
 	name = "photonic microprocessor"
-	desc = "An advanced miniaturised CPU for use in portable devices. It uses photonic core instead of regular circuitry. It can run up to three programs simultaneously."
+	desc = "An advanced miniaturized CPU for use in portable devices. It uses photonic core instead of regular circuitry. It can run up to three programs simultaneously."
 	icon_state = "cpu_small_photonic"
 	hardware_size = 1
 	power_usage = 75

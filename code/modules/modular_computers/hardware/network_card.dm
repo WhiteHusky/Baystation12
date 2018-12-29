@@ -1,13 +1,14 @@
 var/global/ntnet_card_uid = 1
 
 /obj/item/weapon/computer_hardware/network_card/
-	name = "basic NTNet network card"
-	desc = "A basic network card for usage with standard NTNet frequencies."
+	name = "basic DNET network card"
+	desc = "A basic network card for usage with standard DNET frequencies."
 	power_usage = 50
 	origin_tech = list(TECH_DATA = 2, TECH_ENGINEERING = 1)
 	critical = 0
 	icon_state = "netcard_basic"
 	hardware_size = 1
+	base_type = /obj/item/weapon/computer_hardware/network_card
 	var/identification_id = null	// Identification ID. Technically MAC address of this device. Can't be changed by user.
 	var/identification_string = "" 	// Identification string, technically nickname seen in the network. Can be set by user.
 	var/long_range = 0
@@ -31,8 +32,8 @@ var/global/ntnet_card_uid = 1
 	ntnet_card_uid++
 
 /obj/item/weapon/computer_hardware/network_card/advanced
-	name = "advanced NTNet network card"
-	desc = "An advanced network card for usage with standard NTNet frequencies. It's transmitter is strong enough to connect even when far away."
+	name = "advanced DNET network card"
+	desc = "An advanced network card for usage with standard DNET frequencies. It's transmitter is strong enough to connect even when far away."
 	long_range = 1
 	origin_tech = list(TECH_DATA = 4, TECH_ENGINEERING = 2)
 	power_usage = 100 // Better range but higher power usage.
@@ -40,8 +41,8 @@ var/global/ntnet_card_uid = 1
 	hardware_size = 1
 
 /obj/item/weapon/computer_hardware/network_card/wired
-	name = "wired NTNet network card"
-	desc = "An advanced network card for usage with standard NTNet frequencies. This one also supports wired connection."
+	name = "wired DNET network card"
+	desc = "An advanced network card for usage with standard DNET frequencies. This one also supports wired connection."
 	ethernet = 1
 	origin_tech = list(TECH_DATA = 5, TECH_ENGINEERING = 3)
 	power_usage = 100 // Better range but higher power usage.

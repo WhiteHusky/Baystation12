@@ -6,6 +6,14 @@
 	icon_state_unpowered = "console"
 	icon_state_menu = "menu"
 	hardware_flag = PROGRAM_CONSOLE
+	ports_available = list(
+		PORT_CPU = 1,
+		PORT_POWER = 2,
+		PORT_STORAGE = 4,
+		PORT_CARD_READER = 1,
+		PORT_EXPANSION = 6,
+		PORT_EXTERNAL = 4
+	)
 	anchored = TRUE
 	density = 1
 	w_class = ITEM_SIZE_GARGANTUAN

@@ -1,6 +1,6 @@
 /datum/computer_file/program/filemanager
 	filename = "filemanager"
-	filedesc = "NTOS File Manager"
+	filedesc = "DACOS File Manager"
 	extended_desc = "This program allows management of files."
 	program_icon_state = "generic"
 	program_key_state = "generic_key"
@@ -152,7 +152,7 @@
 		SSnano.update_uis(NM)
 
 /datum/nano_module/program/computer_filemanager
-	name = "NTOS File Manager"
+	name = "DACOS File Manager"
 
 /datum/nano_module/program/computer_filemanager/ui_interact(mob/user, ui_key = "main", var/datum/nanoui/ui = null, var/force_open = 1, var/datum/topic_state/state = GLOB.default_state)
 	var/list/data = host.initial_data()
@@ -205,7 +205,7 @@
 
 	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
-		ui = new(user, src, ui_key, "file_manager.tmpl", "NTOS File Manager", 600, 700, state = state)
+		ui = new(user, src, ui_key, "file_manager.tmpl", "DACOS File Manager", 600, 700, state = state)
 		ui.auto_update_layout = 1
 		ui.set_initial_data(data)
 		ui.open()

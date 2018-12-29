@@ -9,9 +9,8 @@
 	visible_message("\The [src] breaks apart!")
 	var/turf/newloc = get_turf(src)
 	new /obj/item/stack/material/steel(newloc, round(steel_sheet_cost/2))
-	for(var/obj/item/weapon/computer_hardware/H in get_all_components())
+	for(var/obj/item/weapon/computer_hardware/H in hardware_installed)
 		uninstall_component(null, H)
-		H.forceMove(newloc)
 		if(prob(25))
 			H.take_damage(rand(10,30))
 	qdel(src)
@@ -29,7 +28,7 @@
 		damage = between(0, damage, max_damage)
 
 	if(component_probability)
-		for(var/obj/item/weapon/computer_hardware/H in get_all_components())
+		for(var/obj/item/weapon/computer_hardware/H in hardware_installed)
 			if(prob(component_probability))
 				H.take_damage(round(amount / 2))
 

@@ -3,6 +3,14 @@
 	name = "laptop computer"
 	desc = "A portable clamshell computer."
 	hardware_flag = PROGRAM_LAPTOP
+	ports_available = list(
+		PORT_CPU = 1,
+		PORT_POWER = 2,
+		PORT_STORAGE = 2,
+		PORT_CARD_READER = 1,
+		PORT_EXPANSION = 4,
+		PORT_EXTERNAL = 4
+	)
 	icon_state_unpowered = "laptop-open"
 	icon = 'icons/obj/modular_laptop.dmi'
 	icon_state = "laptop-open"

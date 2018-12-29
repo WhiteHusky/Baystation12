@@ -1,10 +1,124 @@
+#define CARD_SLOT_NAME "RFID card slot"
+#define CARD_SLOT_CARD "ID card"
+#define INTELLICARD_SLOT_NAME "intellicard slot"
+#define INTELLICARD_SLOT_CARD "intellicard"
+
+/*
+/obj/item/modular_computer/proc/does_any_card_slots_contain_an_id()
+	var/card_slot_list = hardware_by_base_type[HARDWARE_CARD_SLOT]
+	if(card_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in card_slot_list)
+			if(card_slot.stored_card)
+				return TRUE
+	return FALSE
+
+/obj/item/modular_computer/proc/are_any_card_slots_empty()
+	var/card_slot_list = hardware_by_base_type[HARDWARE_CARD_SLOT]
+	if(card_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in card_slot_list)
+			if(!card_slot.stored_card)
+				return TRUE
+	return FALSE
+
+/obj/item/modular_computer/proc/get_card_slots_containing_an_id()
+	. = list()
+	var/card_slot_list = hardware_by_base_type[HARDWARE_CARD_SLOT]
+	if(card_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in card_slot_list)
+			if(card_slot.stored_card)
+				. += card_slot
+
+/obj/item/modular_computer/proc/get_empty_card_slots()
+	. = list()
+	var/card_slot_list = hardware_by_base_type[HARDWARE_CARD_SLOT]
+	if(card_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in card_slot_list)
+			if(!card_slot.stored_card)
+				. += card_slot
+
+/obj/item/modular_computer/proc/does_any_ai_slots_contain_an_ai()
+	var/ai_slot_list = hardware_by_base_type[HARDWARE_AI_SLOT]
+	if(ai_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/ai_slot/ai_slot in ai_slot_list)
+			if(ai_slot.stored_card)
+				return TRUE
+	return FALSE
+
+/obj/item/modular_computer/proc/are_any_ai_slots_empty()
+	var/ai_slot_list = hardware_by_base_type[HARDWARE_AI_SLOT]
+	if(ai_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/ai_slot/ai_slot in ai_slot_list)
+			if(!ai_slot.stored_card)
+				return TRUE
+	return FALSE
+
+/obj/item/modular_computer/proc/get_ai_slots_containing_an_ai()
+	. = list()
+	var/ai_slot_list = hardware_by_base_type[HARDWARE_AI_SLOT]
+	if(ai_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/ai_slot in ai_slot_list)
+			if(ai_slot.stored_card)
+				. += ai_slot
+
+/obj/item/modular_computer/proc/get_empty_ai_slots()
+	. = list()
+	var/ai_slot_list = hardware_by_base_type[HARDWARE_AI_SLOT]
+	if(ai_slot_list != null)
+		for(var/obj/item/weapon/computer_hardware/card_slot/ai_slot in ai_slot_list)
+			if(!ai_slot.stored_card)
+				. += ai_slot
+*/
+
+/obj/item/modular_computer/proc/get_all_cards()
+	. = list()
+	for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in all_hardware_containing_stored_items(HARDWARE_CARD_SLOT))
+		. += card_slot.stored_card
+
+/obj/item/modular_computer/proc/get_all_cards_broadcastable()
+	. = list()
+	for(var/obj/item/weapon/computer_hardware/card_slot/card_slot in all_hardware_containing_stored_items(HARDWARE_CARD_SLOT))
+		if(card_slot.can_broadcast)
+			. += card_slot.stored_card
+
+/obj/item/modular_computer/proc/any_hardware_containing_stored_items(var/base_type_select)
+	var/list/hardware_to_check = hardware_by_base_type[base_type_select]
+	if(hardware_to_check != null)
+		for(var/obj/item/weapon/computer_hardware/hardware_dev in hardware_to_check)
+			if(LAZYLEN(hardware_dev.stored_items))
+				return hardware_dev
+	return null
+
+/obj/item/modular_computer/proc/all_hardware_containing_stored_items(var/base_type_select)
+	. = list()
+	var/list/hardware_to_check = hardware_by_base_type[base_type_select]
+	if(hardware_to_check != null)
+		for(var/obj/item/weapon/computer_hardware/hardware_dev in hardware_to_check)
+			if(LAZYLEN(hardware_dev.stored_items))
+				. += hardware_dev
+
+/obj/item/modular_computer/proc/any_hardware_empty_of_stored_items(var/base_type_select)
+	var/list/hardware_to_check = hardware_by_base_type[base_type_select]
+	if(hardware_to_check != null)
+		for(var/obj/item/weapon/computer_hardware/hardware_dev in hardware_to_check)
+			if(LAZYLEN(hardware_dev.stored_items) <= 0)
+				return hardware_dev
+	return null
+
+/obj/item/modular_computer/proc/all_hardware_empty_of_stored_items(var/base_type_select)
+	. = list()
+	var/list/hardware_to_check = hardware_by_base_type[base_type_select]
+	if(hardware_to_check != null)
+		for(var/obj/item/weapon/computer_hardware/hardware_dev in hardware_to_check)
+			if(LAZYLEN(hardware_dev.stored_items) <= 0)
+				. += hardware_dev
+
 /obj/item/modular_computer/proc/update_verbs()
 	verbs.Cut()
-	if(ai_slot)
+	if(hardware_by_base_type[HARDWARE_AI_SLOT] != null)
 		verbs |= /obj/item/modular_computer/verb/eject_ai
-	if(portable_drive)
+	if(ports_occupied[PORT_EXTERNAL] != null)
 		verbs |= /obj/item/modular_computer/verb/eject_usb
-	if(card_slot && card_slot.stored_card)
+	if(any_hardware_containing_stored_items(HARDWARE_CARD_SLOT))
 		verbs |= /obj/item/modular_computer/verb/eject_id
 	if(stores_pen && istype(stored_pen))
 		verbs |= /obj/item/modular_computer/verb/remove_pen
@@ -35,10 +149,10 @@
 			update_progress = 0
 			if(prob(10))
 				visible_message("<span class='warning'>[src] emits some ominous clicks.</span>")
-				hard_drive.take_damage(hard_drive.damage_malfunction)
+				boot_device.take_damage(boot_device.damage_malfunction)
 			else if(prob(5))
 				visible_message("<span class='warning'>[src] emits some ominous clicks.</span>")
-				hard_drive.take_damage(hard_drive.damage_failure)
+				boot_device.take_damage(boot_device.damage_failure)
 		shutdown_computer(FALSE)
 		spawn(2 SECONDS)
 			bsod = 0
@@ -59,7 +173,7 @@
 		to_chat(usr, "<span class='warning'>You can't reach it.</span>")
 		return
 
-	proc_eject_id(usr)
+	handle_card_slot_interaction(null, usr, HARDWARE_CARD_SLOT, CARD_SLOT_NAME, CARD_SLOT_CARD)
 
 // Eject ID card from computer, if it has ID slot with card inside.
 /obj/item/modular_computer/verb/eject_usb()
@@ -90,7 +204,7 @@
 		to_chat(usr, "<span class='warning'>You can't reach it.</span>")
 		return
 
-	proc_eject_ai(usr)
+	handle_card_slot_interaction(null, usr, HARDWARE_AI_SLOT, INTELLICARD_SLOT_NAME, INTELLICARD_SLOT_CARD)
 
 /obj/item/modular_computer/verb/remove_pen()
 	set name = "Remove Pen"
@@ -111,53 +225,102 @@
 		stored_pen = null
 		update_verbs()
 
-/obj/item/modular_computer/proc/proc_eject_id(mob/user)
-	if(!user)
-		user = usr
+/obj/item/modular_computer/proc/select_hardware(var/mob/user, var/list/list_of_hardware, var/device_name, var/title_text, var/message_text)
+	if(list_of_hardware == null || LAZYLEN(list_of_hardware) <= 0)
+		to_chat(user, "There is no [device_name] connected to \the [src].")
+	var/obj/hardware_selected
+	if(list_of_hardware.len == 1)
+		hardware_selected = list_of_hardware[1]
+	else
+		var/list/choices = list()
+		for(var/i = 1 to LAZYLEN(list_of_hardware))
+			choices["[i]: [list_of_hardware[i]]"] = list_of_hardware[i]
+		
+		var/input_response = input(user, "[message_text]", "[title_text]") as null|anything in choices
+		
+		if(!input_response)
+			to_chat(user, "You change your mind.")
+			return
 
-	if(!card_slot)
-		to_chat(user, "\The [src] does not have an ID card slot")
-		return
-
-	if(!card_slot.stored_card)
-		to_chat(user, "There is no card in \the [src]")
-		return
-
-	if(active_program)
-		active_program.event_idremoved(0)
-
-	for(var/datum/computer_file/program/P in idle_threads)
-		P.event_idremoved(1)
-
-	user.put_in_hands(card_slot.stored_card)
-	to_chat(user, "You remove [card_slot.stored_card] from [src].")
-	card_slot.stored_card = null
-	update_uis()
-	update_verbs()
+		if(!Adjacent(user) || user.incapacitated())
+			to_chat(user, "You need keep near \the [src].")
+			return
+		
+		hardware_selected = choices[input_response]
+		if(!hardware_to_hardware_gid[hardware_selected])
+			to_chat(user, "You reach to \the [src] but \the [device_name] itself is missing!")
+			return
+	return hardware_selected
 
 /obj/item/modular_computer/proc/proc_eject_usb(mob/user)
 	if(!user)
 		user = usr
+	var/obj/selected_hardware = select_hardware(user, ports_occupied[PORT_EXTERNAL], "portable device", "Removing portable device", "Select a portable device to remove")
+	if(selected_hardware)
+		uninstall_component(user, selected_hardware)
+		update_uis()
 
-	if(!portable_drive)
-		to_chat(user, "There is no portable device connected to \the [src].")
-		return
+// Thanks for loaf for help figuring out a way to consolidate inserting cards and intellicards.
+// And then there's me butchering that idea.
+/obj/item/modular_computer/proc/handle_card_slot_interaction(var/obj/item/weapon/card, var/mob/user, var/slot_type, var/slot_name, var/card_name)
+	if(hardware_by_base_type[slot_type] == null)
+		to_chat(user, "You try to [card ? "insert" : "eject"] [card] into [src], but it does not have an [slot_name] installed.")
+		return FALSE
+	
+	var/list/card_slots
+	var/verb_text
+	var/verbing_text
+	var/title_text
+	switch(istype(card))
+		if(TRUE)
+			verb_text = "insert"
+			verbing_text = "inserting"
+			title_text = "Inserting"
+			card_slots = all_hardware_empty_of_stored_items(slot_type)
 
-	uninstall_component(user, portable_drive)
+		if(FALSE)
+			verb_text = "eject"
+			verbing_text = "ejecting"
+			title_text = "Ejecting"
+			card_slots = all_hardware_containing_stored_items(slot_type)
+
+	
+	if(!LAZYLEN(card_slots) <= 0)
+		if(card)
+			to_chat(user, "You try to [verb_text] [card] into [src], but you can't find an unoccupied [slot_name].")
+		else
+			to_chat(user, "You try to [verb_text] a [card_name] from [src], but you can not find any.")
+		return FALSE
+	
+	var/obj/item/weapon/computer_hardware/card_slot_selected
+	if(LAZYLEN(card_slots) == 1)
+		card_slot_selected = card_slots[1]
+	else
+		var/list/choices = list()
+		for(var/i = 1 to LAZYLEN(card_slots))
+			choices["[i]: [card_slots[i]]"] = card_slots[i]
+		
+		var/input_response = input(user, "Select a slot to [verb_text] [card_name].", "[title_text] [card_name]") as null|anything in choices
+		
+		if(!input_response)
+			to_chat(user, "You change your mind about [verbing_text] \the [card] [card ? "into" : "from"] \the [src]")
+			return FALSE
+
+		if(!Adjacent(user) || user.incapacitated())
+			to_chat(user, "You need keep near \the [src].")
+			return FALSE
+		
+		card_slot_selected = choices[input_response]
+		if(!hardware_to_hardware_gid[card_slot_selected])
+			to_chat(user, "You reach to \the [src] but \the [slot_name] itself is missing!")
+			return FALSE
+	
+	if(card)
+		card_slot_selected.insert_item(user, card)
+	else
+		card_slot_selected.prompt_remove_stored_item(user)
 	update_uis()
-
-/obj/item/modular_computer/proc/proc_eject_ai(mob/user)
-	if(!user)
-		user = usr
-
-	if(!ai_slot || !ai_slot.stored_card)
-		to_chat(user, "There is no intellicard connected to \the [src].")
-		return
-
-	ai_slot.stored_card.dropInto(loc)
-	ai_slot.stored_card = null
-	ai_slot.update_power_usage()
-	update_uis()
+	update_verbs()
 
 /obj/item/modular_computer/attack_ghost(var/mob/observer/ghost/user)
 	if(enabled)
@@ -184,23 +347,13 @@
 
 /obj/item/modular_computer/attackby(var/obj/item/weapon/W as obj, var/mob/user as mob)
 	if(istype(W, /obj/item/weapon/card/id)) // ID Card, try to insert it.
-		var/obj/item/weapon/card/id/I = W
-		if(!card_slot)
-			to_chat(user, "You try to insert [I] into [src], but it does not have an ID card slot installed.")
-			return
-
-		if(card_slot.stored_card)
-			to_chat(user, "You try to insert [I] into [src], but its ID card slot is occupied.")
-			return
-
-		if(!user.unEquip(I, src))
-			return
-		card_slot.stored_card = I
-		update_uis()
-		update_verbs()
-		to_chat(user, "You insert [I] into [src].")
-
+		handle_card_slot_interaction(W, user, HARDWARE_CARD_SLOT, CARD_SLOT_NAME, CARD_SLOT_CARD)
 		return
+	
+	if(istype(W, /obj/item/weapon/aicard))
+		handle_card_slot_interaction(W, user, HARDWARE_AI_SLOT, INTELLICARD_SLOT_NAME, INTELLICARD_SLOT_CARD)
+		return
+	
 	if(istype(W, /obj/item/weapon/pen) && stores_pen)
 		if(istype(stored_pen))
 			to_chat(user, "<span class='notice'>There is already a pen in [src].</span>")
@@ -213,29 +366,25 @@
 		return
 	if(istype(W, /obj/item/weapon/paper))
 		var/obj/item/weapon/paper/paper = W
-		if(scanner && paper.info)
-			scanner.do_on_attackby(user, W)
-			return
+		if(paper.info)
+			var/obj/item/weapon/computer_hardware/scanner/scanner = select_hardware(user, hardware_by_base_type[HARDWARE_SCANNER], "scanner", "Selecting scanner", "Select a scanner to scan [paper]")
+			if(scanner)
+				scanner.do_on_attackby(user, W)
+				return
 	if(istype(W, /obj/item/weapon/paper) || istype(W, /obj/item/weapon/paper_bundle))
-		if(nano_printer)
-			nano_printer.attackby(W, user)
-	if(istype(W, /obj/item/weapon/aicard))
-		if(!ai_slot)
+		var/obj/printer = select_hardware(user, hardware_by_base_type[HARDWARE_NANO_PRINTER], "printer", "Selecting printer", "Select a printer to recycle [W]")
+		if(printer)
+			printer.attackby(W, user)
 			return
-		ai_slot.attackby(W, user)
 
 	if(!modifiable)
 		return ..()
 
 	if(istype(W, /obj/item/weapon/computer_hardware))
-		var/obj/item/weapon/computer_hardware/C = W
-		if(C.hardware_size <= max_hardware_size)
-			try_install_component(user, C)
-		else
-			to_chat(user, "This component is too large for \the [src].")
+		try_install_component(user, W)
+		
 	if(isWrench(W))
-		var/list/components = get_all_components()
-		if(components.len)
+		if(LAZYLEN(hardware_installed))
 			to_chat(user, "Remove all components from \the [src] before disassembling it.")
 			return
 		new /obj/item/stack/material/steel( get_turf(src.loc), steel_sheet_cost )
@@ -259,29 +408,11 @@
 		return
 
 	if(isScrewdriver(W))
-		var/list/all_components = get_all_components()
-		if(!all_components.len)
+		var/list/selected_hardware = select_hardware(user, hardware_installed, "hardware", "Removing hardware", "Select hardware to remove.")
+		if(!selected_hardware)
 			to_chat(user, "This device doesn't have any components installed.")
 			return
-		var/list/component_names = list()
-		for(var/obj/item/weapon/computer_hardware/H in all_components)
-			component_names.Add(H.name)
-
-		var/choice = input(usr, "Which component do you want to uninstall?", "Computer maintenance", null) as null|anything in component_names
-
-		if(!choice)
-			return
-
-		if(!Adjacent(usr))
-			return
-
-		var/obj/item/weapon/computer_hardware/H = find_hardware_by_name(choice)
-
-		if(!H)
-			return
-
-		uninstall_component(user, H)
-
+		uninstall_component(user, selected_hardware)
 		return
 
 	..()
@@ -292,8 +423,8 @@
 	if(enabled && .)
 		to_chat(user, "The time [stationtime2text()] is displayed in the corner of the screen.")
 
-	if(card_slot && card_slot.stored_card)
-		to_chat(user, "The [card_slot.stored_card] is inserted into it.")
+	for(var/obj/card in get_all_cards())
+		to_chat(user, "\The [card] is inserted.")
 
 /obj/item/modular_computer/MouseDrop(var/atom/over_object)
 	var/mob/M = usr
@@ -302,10 +433,16 @@
 
 /obj/item/modular_computer/afterattack(atom/target, mob/user, proximity)
 	. = ..()
-	if(scanner)
-		scanner.do_on_afterattack(user, target, proximity)
+	if(hardware_by_base_type[HARDWARE_SCANNER] != null)
+		for(var/obj/item/weapon/computer_hardware/scanner/scanner in hardware_by_base_type[HARDWARE_SCANNER])
+			scanner.do_on_afterattack(user, target, proximity)
 
 obj/item/modular_computer/CtrlAltClick(mob/user)
 	if(!CanPhysicallyInteract(user))
 		return
 	open_terminal(user)
+
+#undef CARD_SLOT_NAME
+#undef CARD_SLOT_CARD
+#undef INTELLICARD_SLOT_NAME
+#undef INTELLICARD_SLOT_CARD

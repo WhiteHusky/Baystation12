@@ -25,6 +25,8 @@
 	var/ui_header = null							// Example: "something.gif" - a header image that will be rendered in computer's UI when this program is running at background. Images are taken from /nano/images/status_icons. Be careful not to use too large images!
 	var/ntnet_speed = 0								// GQ/s - current network connectivity transfer rate
 	var/operator_skill = SKILL_MIN                  // Holder for skill value of current/recent operator for programs that tick.
+	var/uses_net_speed = FALSE						// Should we bother updating the ntnet_speed.
+	var/disk_gid = 0								// The disk gid the program is running off. Used to determine if the disk was removed.
 
 /datum/computer_file/program/New(var/obj/item/modular_computer/comp = null)
 	..(null)
@@ -100,18 +102,14 @@
 
 // Called by Process() on device that runs us, once every tick.
 /datum/computer_file/program/proc/process_tick()
-	update_netspeed()
+	if(uses_net_speed)
+		update_netspeed()
 	return 1
 
 /datum/computer_file/program/proc/update_netspeed()
 	ntnet_speed = 0
-	switch(ntnet_status)
-		if(1)
-			ntnet_speed = NTNETSPEED_LOWSIGNAL
-		if(2)
-			ntnet_speed = NTNETSPEED_HIGHSIGNAL
-		if(3)
-			ntnet_speed = NTNETSPEED_ETHERNET
+	if(computer)
+		ntnet_speed = computer.get_ntnet_speed()
 
 // Check if the user can run program. Only humans can operate computer. Automatically called in run_program()
 // User has to wear their ID or have it inhand for ID Scan to work.

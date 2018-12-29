@@ -18,34 +18,46 @@
 
 	// We are still here, that means there is no program loaded. Load the BIOS/ROM/OS/whatever you want to call it.
 	// This screen simply lists available programs and user may select them.
-	if(!hard_drive || !hard_drive.stored_files || !hard_drive.stored_files.len)
-		visible_message("\The [src] beeps three times, it's screen displaying \"DISK ERROR\" warning.")
-		return // No HDD, No HDD files list or no stored files. Something is very broken.
+	var/list/data = list()
+	data["boot_devices"] = null
+	data["boot_device_present"] = (boot_device ? TRUE : FALSE)
+	if(!boot_device) // Missing a boot device, so the user will have to select a new one. 
+		var/list/hard_drives = hardware_by_base_type[HARDWARE_HARD_DRIVE]
+		if(hard_drives != null)
+			data["boot_devices"] = list()
+			for(var/obj/hard_drive in hard_drives)
+				data["boot_devices"].Add(hardware_to_hardware_gid[hard_drive])	
+	else
+		if(!boot_device.stored_files || !boot_device.stored_files.len)
+			visible_message("\The [src] beeps three times, it's screen displaying \"DISK CORRUPTED\" warning.")
+			boot_device = null // Should let the user select a different device.
+			if(ui)
+				ui.close()
+			shutdown_computer()
+			return
+		else
+			data += get_header_data()
+			var/datum/computer_file/data/autorun = boot_device.find_file_by_name("autorun")
+			var/list/programs = list()
+			for(var/datum/computer_file/program/P in boot_device.stored_files)
+				var/list/program = list()
+				program["name"] = P.filename
+				program["desc"] = P.filedesc
+				program["icon"] = P.program_menu_icon
+				program["autorun"] = (istype(autorun) && (autorun.stored_data == P.filename)) ? 1 : 0
+				if(P in idle_threads)
+					program["running"] = 1
+				programs.Add(list(program))
 
-	var/datum/computer_file/data/autorun = hard_drive.find_file_by_name("autorun")
+			data["programs"] = programs
 
-	var/list/data = get_header_data()
-
-	var/list/programs = list()
-	for(var/datum/computer_file/program/P in hard_drive.stored_files)
-		var/list/program = list()
-		program["name"] = P.filename
-		program["desc"] = P.filedesc
-		program["icon"] = P.program_menu_icon
-		program["autorun"] = (istype(autorun) && (autorun.stored_data == P.filename)) ? 1 : 0
-		if(P in idle_threads)
-			program["running"] = 1
-		programs.Add(list(program))
-
-	data["programs"] = programs
-
-	data["updating"] = updating
-	data["update_progress"] = update_progress
-	data["updates"] = updates
+			data["updating"] = updating
+			data["update_progress"] = update_progress
+			data["updates"] = updates
 
 	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
-		ui = new(user, src, ui_key, "laptop_mainscreen.tmpl", "NTOS Main Menu", 400, 500)
+		ui = new(user, src, ui_key, "laptop_mainscreen.tmpl", "DACOS Main Menu", 400, 500)
 		ui.auto_update_layout = 1
 		ui.set_initial_data(data)
 		ui.open()
@@ -60,6 +72,9 @@
 // Handles user's GUI input
 /obj/item/modular_computer/Topic(href, href_list)
 	if(..())
+		return 1
+	if( href_list["BIOS_set_device"] )
+		boot_device = hardware_gid_to_hardware[href_list["BIOS_set_device"]]
 		return 1
 	if( href_list["PC_exit"] )
 		kill_program()
@@ -119,8 +134,9 @@
 /obj/item/modular_computer/proc/get_header_data()
 	var/list/data = list()
 
-	if(battery_module)
-		switch(battery_module.battery.percent())
+	if(hardware_by_base_type[HARDWARE_BATTERY_MODULE] != null)
+		var/battery_percent = get_average_battery_charge_percent()
+		switch(battery_percent)
 			if(80 to 200) // 100 should be maximal but just in case..
 				data["PC_batteryicon"] = "batt_100.gif"
 			if(60 to 80)
@@ -133,17 +149,17 @@
 				data["PC_batteryicon"] = "batt_20.gif"
 			else
 				data["PC_batteryicon"] = "batt_5.gif"
-		data["PC_batterypercent"] = "[round(battery_module.battery.percent())] %"
+		data["PC_batterypercent"] = "[round(battery_percent)] %"
 		data["PC_showbatteryicon"] = 1
 	else
 		data["PC_batteryicon"] = "batt_5.gif"
 		data["PC_batterypercent"] = "N/C"
-		data["PC_showbatteryicon"] = battery_module ? 1 : 0
+		data["PC_showbatteryicon"] = hardware_by_base_type[HARDWARE_BATTERY_MODULE] != null ? 1 : 0
 
-	if(tesla_link && tesla_link.enabled && apc_powered)
+	if(check_tesla_functionality())
 		data["PC_apclinkicon"] = "charging.gif"
 
-	if(network_card && network_card.is_banned())
+	if(all_cards_banned())
 		data["PC_ntneticon"] = "sig_warning.gif"
 	else
 		switch(get_ntnet_status())

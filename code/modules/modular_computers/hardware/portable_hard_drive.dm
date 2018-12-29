@@ -7,6 +7,8 @@
 	hardware_size = 1
 	max_capacity = 16
 	origin_tech = list(TECH_DATA = 1)
+	port_type = PORT_EXTERNAL
+	base_type = /obj/item/weapon/computer_hardware/hard_drive/portable
 
 /obj/item/weapon/computer_hardware/hard_drive/portable/advanced
 	name = "advanced data crystal"

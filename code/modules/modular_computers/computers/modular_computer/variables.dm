@@ -1,4 +1,5 @@
 // This is the base type that handles everything. Subtypes can be easily created by tweaking variables in this file to your liking.
+var/modular_computer_hardware_gid = 0 // Helps programs keep track of hardware.
 
 /obj/item/modular_computer
 	name = "Modular Computer"
@@ -8,8 +9,19 @@
 	var/screen_on = 1										// Whether the computer is active/opened/it's screen is on.
 	var/datum/computer_file/program/active_program = null	// A currently active program running on the computer.
 	var/hardware_flag = 0									// A flag that describes this device type
+	var/list/ports_available = list()						// What kind of hardware types and how many can be installed as a associative list. 
+															// PORT_POWER, PORT_STORAGE, PORT_EXTERNAL, PORT_EXPANSION, PORT_CARD_READER
+	var/list/hardware_installed = list()					// List of hardware installed in the machine.
+	var/list/ports_occupied = list()						// A auto-generated list containing hardware organized by port type to lists containing that hardware
+	var/list/hardware_gid_to_hardware = list()				// Auto generated list to convert from hardware gid to hardware
+	var/list/hardware_to_hardware_gid = list()				// Ditto, but hardware to hardware gid
+	var/list/hardware_by_base_type = list()					// For programs that want to locate by type of hardware. Like network cards.
+	var/var/obj/item/weapon/computer_hardware/hard_drive/boot_device = null
+															// The device considered to be the "boot" device or what the program list will be generated from.
+	var/max_idle_programs = 0								// The sum of all processor unit's max_idle_programs
+	var/shutdown_chance = 0									// When someone installs a bad processor.
 	var/last_power_usage = 0								// Last tick power usage of this computer
-	var/last_battery_percent = 0							// Used for deciding if battery percentage has chandged
+	var/last_battery_percent = 0							// Used for deciding if battery percentage has changed
 	var/last_world_time = "00:00"
 	var/list/last_header_icons
 	var/computer_emagged = FALSE							// Whether the computer is emagged.
@@ -42,18 +54,18 @@
 	var/list/terminals          // List of open terminal datums.
 
 	// Important hardware (must be installed for computer to work)
-	var/obj/item/weapon/computer_hardware/processor_unit/processor_unit				// CPU. Without it the computer won't run. Better CPUs can run more programs at once.
-	var/obj/item/weapon/computer_hardware/network_card/network_card					// Network Card component of this computer. Allows connection to NTNet
-	var/obj/item/weapon/computer_hardware/hard_drive/hard_drive						// Hard Drive component of this computer. Stores programs and files.
+	//var/obj/item/weapon/computer_hardware/processor_unit/processor_unit				// CPU. Without it the computer won't run. Better CPUs can run more programs at once.
+	//var/obj/item/weapon/computer_hardware/network_card/network_card					// Network Card component of this computer. Allows connection to NTNet
+	//var/obj/item/weapon/computer_hardware/hard_drive/hard_drive						// Hard Drive component of this computer. Stores programs and files.
 
 	// Optional hardware (improves functionality, but is not critical for computer to work in most cases)
-	var/obj/item/weapon/computer_hardware/battery_module/battery_module				// An internal power source for this computer. Can be recharged.
-	var/obj/item/weapon/computer_hardware/card_slot/card_slot						// ID Card slot component of this computer. Mostly for HoP modification console that needs ID slot for modification.
-	var/obj/item/weapon/computer_hardware/nano_printer/nano_printer					// Nano Printer component of this computer, for your everyday paperwork needs.
-	var/obj/item/weapon/computer_hardware/hard_drive/portable/portable_drive		// Portable data storage
-	var/obj/item/weapon/computer_hardware/ai_slot/ai_slot							// AI slot, an intellicard housing that allows modifications of AIs.
-	var/obj/item/weapon/computer_hardware/tesla_link/tesla_link						// Tesla Link, Allows remote charging from nearest APC.
-	var/obj/item/weapon/computer_hardware/scanner/scanner							// One of several optional scanner attachments.
+	//var/obj/item/weapon/computer_hardware/battery_module/battery_module				// An internal power source for this computer. Can be recharged.
+	//var/obj/item/weapon/computer_hardware/card_slot/card_slot						// ID Card slot component of this computer. Mostly for HoP modification console that needs ID slot for modification.
+	//var/obj/item/weapon/computer_hardware/nano_printer/nano_printer					// Nano Printer component of this computer, for your everyday paperwork needs.
+	//var/obj/item/weapon/computer_hardware/hard_drive/portable/portable_drive		// Portable data storage
+	//var/obj/item/weapon/computer_hardware/ai_slot/ai_slot							// AI slot, an intellicard housing that allows modifications of AIs.
+	//var/obj/item/weapon/computer_hardware/tesla_link/tesla_link						// Tesla Link, Allows remote charging from nearest APC.
+	//var/obj/item/weapon/computer_hardware/scanner/scanner							// One of several optional scanner attachments.
 
 	var/modifiable = TRUE	// can't be modified or damaged if false
 
@@ -66,3 +78,5 @@
 	var/updates = 0
 	var/update_progress = 0
 	var/update_postshutdown
+
+	var/completed_first_boot = FALSE // Initialize hardware and install programs when the computer is first interacted with instead on server start.

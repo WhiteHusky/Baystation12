@@ -1,6 +1,6 @@
 /datum/computer_file/program/ntnetdownload
 	filename = "ntndownloader"
-	filedesc = "NTNet Software Download Tool"
+	filedesc = "DNET Software Download Tool"
 	program_icon_state = "generic"
 	program_key_state = "generic_key"
 	program_menu_icon = "arrowthickstop-1-s"
@@ -64,14 +64,14 @@
 	return 1
 
 /datum/computer_file/program/ntnetdownload/proc/hide_file_info(datum/computer_file/file, skill)
-	server = (file in ntnet_global.available_station_software) ? "NTNet Software Repository" : "unspecified server"
+	server = (file in ntnet_global.available_station_software) ? "DNET Software Repository" : "unspecified server"
 	if(!hacked_download)
 		return "[file.filename].[file.filetype]"
 	var/stealth_chance = max(skill - SKILL_BASIC, 0) * 30
 	if(!prob(stealth_chance))
 		return "**ENCRYPTED**.[file.filetype]"
 	var/datum/computer_file/fake_file = pick(ntnet_global.available_station_software)
-	server = "NTNet Software Repository"
+	server = "DNET Software Repository"
 	return "[fake_file.filename].[fake_file.filetype]"
 
 /datum/computer_file/program/ntnetdownload/proc/abort_file_download()
@@ -204,7 +204,7 @@
 
 	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
-		ui = new(user, src, ui_key, "ntnet_downloader.tmpl", "NTNet Download Program", 575, 700, state = state)
+		ui = new(user, src, ui_key, "ntnet_downloader.tmpl", "DNET Download Program", 575, 700, state = state)
 		ui.auto_update_layout = 1
 		ui.set_initial_data(data)
 		ui.open()

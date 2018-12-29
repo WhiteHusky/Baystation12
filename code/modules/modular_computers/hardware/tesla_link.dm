@@ -6,6 +6,8 @@
 	icon_state = "teslalink"
 	hardware_size = 1
 	origin_tech = list(TECH_DATA = 2, TECH_POWER = 3, TECH_ENGINEERING = 2)
+	port_type = PORT_POWER
+	base_type = /obj/item/weapon/computer_hardware/tesla_link
 	var/passive_charging_rate = 250			// W
 
 /obj/item/weapon/computer_hardware/tesla_link/Destroy()

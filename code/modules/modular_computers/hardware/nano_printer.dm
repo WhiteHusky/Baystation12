@@ -6,6 +6,7 @@
 	critical = 0
 	icon_state = "printer"
 	hardware_size = 1
+	base_type = /obj/item/weapon/computer_hardware/nano_printer
 	var/stored_paper = 50
 	var/max_paper = 50
 

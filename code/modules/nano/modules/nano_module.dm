@@ -60,7 +60,7 @@
 		if(!MC.nano_printer.print_text(text))
 			to_chat(user, "Error: Printer was unable to print the document. It may be out of paper.")
 	else
-		to_chat(user, "Error: Unable to detect compatible printer interface. Are you running NTOSv2 compatible system?")
+		to_chat(user, "Error: Unable to detect compatible printer interface. Are you running DACOSv2 compatible system?")
 
 /datum/proc/initial_data()
 	return list()

@@ -8,7 +8,7 @@
 	hardware_size = 1
 	critical = 0
 	origin_tech = list(TECH_DATA = 2, TECH_ENGINEERING = 2)
-
+	base_type = /obj/item/weapon/computer_hardware/scanner
 	var/driver_type = /datum/computer_file/program/scanner		// A program type that the scanner interfaces with and attempts to install on insertion.
 	var/datum/computer_file/program/scanner/driver		 		// A driver program which has been set up to interface with the scanner.
 	var/can_run_scan = 0	//Whether scans can be run from the program directly.

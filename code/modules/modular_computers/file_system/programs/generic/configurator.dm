@@ -18,7 +18,7 @@
 	usage_flags = PROGRAM_ALL
 
 /datum/nano_module/program/computer_configurator
-	name = "NTOS Computer Configuration Tool"
+	name = "DACOS Computer Configuration Tool"
 	var/obj/item/modular_computer/movable = null
 
 /datum/nano_module/program/computer_configurator/ui_interact(mob/user, ui_key = "main", var/datum/nanoui/ui = null, var/force_open = 1, var/datum/topic_state/state = GLOB.default_state)
@@ -36,24 +36,27 @@
 	if(program)
 		data = program.get_header_data()
 
-	var/list/hardware = movable.get_all_components()
-
-	data["disk_size"] = movable.hard_drive.max_capacity
-	data["disk_used"] = movable.hard_drive.used_capacity
+	data["disk_size"] = movable.boot_device.max_capacity
+	data["disk_used"] = movable.boot_device.used_capacity
 	data["power_usage"] = movable.last_power_usage
+	if(hardware_by_base_type[HARDWARE_BATTERY_MODULE] != null)
+		data["battery_exists"] = 1
+		for(var/obj/item/weapon/computer_hardware/battery_module/battery_module in hardware_by_base_type[HARDWARE_BATTERY_MODULE])
+
 	data["battery_exists"] = movable.battery_module ? 1 : 0
 	if(movable.battery_module)
 		data["battery_rating"] = movable.battery_module.battery.maxcharge
 		data["battery_percent"] = round(movable.battery_module.battery.percent())
 
 	var/list/all_entries[0]
-	for(var/obj/item/weapon/computer_hardware/H in hardware)
+	for(var/obj/item/weapon/computer_hardware/H in hardware_installed)
 		all_entries.Add(list(list(
 		"name" = H.name,
 		"desc" = H.desc,
 		"enabled" = H.enabled,
 		"critical" = H.critical,
-		"powerusage" = H.power_usage
+		"powerusage" = H.power_usage,
+		"mountpoint" = movable.hardware_to_hardware_gid[H]
 		)))
 
 	data["hardware"] = all_entries
@@ -62,7 +65,7 @@
 
 	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
 	if (!ui)
-		ui = new(user, src, ui_key, "laptop_configuration.tmpl", "NTOS Configuration Utility", 575, 700, state = state)
+		ui = new(user, src, ui_key, "laptop_configuration.tmpl", "DACOS Configuration Utility", 575, 700, state = state)
 		ui.auto_update_layout = 1
 		ui.set_initial_data(data)
 		ui.open()

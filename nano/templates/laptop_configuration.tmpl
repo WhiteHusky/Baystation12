@@ -55,19 +55,25 @@
 	<div class="itemContent">
 		{{:value.powerusage}}W
 	</div>
-	{{if !value.critical}}
 	<div class="itemLabel">
-		Toggle Component: 
+		Mount Point: 
 	</div>
 	<div class="itemContent">
-		{{:helper.link("ON", null, {'PC_enable_component' : value.name}, value.enabled ? 'disabled' : null)}}
-		{{:helper.link("OFF", null, {'PC_disable_component' : value.name}, value.enabled ? null : 'disabled')}}
-	</div>			
+		{{:value.mountpoint}}
+	</div>
+	{{if !value.critical}}
+		<div class="itemLabel">
+			Toggle Component: 
+		</div>
+		<div class="itemContent">
+			{{:helper.link("ON", null, {'PC_enable_component' : value.name}, value.enabled ? 'disabled' : null)}}
+			{{:helper.link("OFF", null, {'PC_disable_component' : value.name}, value.enabled ? null : 'disabled')}}
+		</div>			
 	{{/if}}
 	<br><br>
 {{/for}}
 	<h3>Auto-Updater</h3>
-	<i>Automatically downloads and installs critical OS upgrades if NTNet is reachable. Disabling voids warranty.</i><br>
+	<i>Automatically downloads and installs critical OS upgrades if DNET is reachable. Disabling voids warranty.</i><br>
 	<div class="itemLabel">
 		State: 
 	</div>
@@ -83,4 +89,4 @@
 	</div>
 	<br><br>
 <hr><hr>
-<i>NTOS v2.0.4b Copyright NanoTrasen 2557 - 2559</i>
+<i>DACOS v2.0.4b Copyright Deimos Advanced Information Systems DACOS_PATENT_DATE? - 2559</i>

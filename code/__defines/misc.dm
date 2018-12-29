@@ -135,6 +135,60 @@
 #define PROGRAM_STATE_BACKGROUND 1
 #define PROGRAM_STATE_ACTIVE 2
 
+// Port Types
+/decl/modular_computer_port
+	var/name = "Improper Port"
+	var/desc = "You should not be seeing this."
+	var/mount = "unkn"
+
+/decl/modular_computer_port/cpu
+	name = "CPU Port"
+	desc = "tbd"
+	mount = "cpu"
+
+/decl/modular_computer_port/power
+	name = "Power Port"
+	desc = "tbd"
+	mount = "ps"
+	
+/decl/modular_computer_port/storage
+	name = "Storage Port"
+	desc = "tbd"
+	mount = "hata" // Hyperial Advanced Technology Attachment
+	
+/decl/modular_computer_port/external
+	name = "External Port"
+	desc = "tbd"
+	mount = "dhb" // Data Hyperial Bus
+
+/decl/modular_computer_port/expansion
+	name = "Expansion Port"
+	desc = "tbd"
+	mount = "ep"
+	
+/decl/modular_computer_port/card_reader
+	name = "Card Reader Port"
+	desc = "rfid"
+
+
+#define PORT_CPU			/decl/modular_computer_port/cpu
+#define PORT_POWER			/decl/modular_computer_port/power
+#define PORT_STORAGE		/decl/modular_computer_port/storage
+#define PORT_EXTERNAL		/decl/modular_computer_port/external
+#define PORT_EXPANSION		/decl/modular_computer_port/expansion
+#define PORT_CARD_READER	/decl/modular_computer_port/card_reader
+
+#define HARDWARE_SCANNER			/obj/item/weapon/computer_hardware/scanner
+#define HARDWARE_AI_SLOT			/obj/item/weapon/computer_hardware/ai_slot
+#define HARDWARE_BATTERY_MODULE		/obj/item/weapon/computer_hardware/battery_module
+#define HARDWARE_CARD_SLOT			/obj/item/weapon/computer_hardware/card_slot
+#define HARDWARE_HARD_DRIVE			/obj/item/weapon/computer_hardware/hard_drive
+#define HARDWARE_NANO_PRINTER		/obj/item/weapon/computer_hardware/nano_printer
+#define HARDWARE_NETWORK_CARD		/obj/item/weapon/computer_hardware/network_card
+#define HARDWARE_PORTABLE_DRIVE		/obj/item/weapon/computer_hardware/hard_drive/portable
+#define HARDWARE_PROCESSOR_UNIT		/obj/item/weapon/computer_hardware/processor_unit
+#define HARDWARE_TESLA_LINK			/obj/item/weapon/computer_hardware/tesla_link
+
 // Caps for NTNet logging. Less than 10 would make logging useless anyway, more than 500 may make the log browser too laggy. Defaults to 100 unless user changes it.
 #define MAX_NTNET_LOGS 500
 #define MIN_NTNET_LOGS 10

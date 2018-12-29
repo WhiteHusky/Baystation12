@@ -10,21 +10,14 @@
 	available_on_ntnet = 0
 	available_on_syndinet = 1
 	nanomodule_path = /datum/nano_module/program/computer_dos/
+	uses_net_speed = TRUE
 	var/obj/machinery/ntnet_relay/target = null
 	var/dos_speed = 0
 	var/error = ""
 	var/executed = 0
 
 /datum/computer_file/program/ntnet_dos/process_tick()
-	dos_speed = 0
-	switch(ntnet_status)
-		if(1)
-			dos_speed = NTNETSPEED_LOWSIGNAL
-		if(2)
-			dos_speed = NTNETSPEED_HIGHSIGNAL
-		if(3)
-			dos_speed = NTNETSPEED_ETHERNET
-	dos_speed *= NTNETSPEED_DOS_AMPLIFICATION + operator_skill - SKILL_BASIC
+	dos_speed = ntnet_speed * (NTNETSPEED_DOS_AMPLIFICATION + operator_skill - SKILL_BASIC)
 	if(target && executed)
 		target.dos_overload += dos_speed
 		if(!target.operable())

@@ -1,169 +1,118 @@
-// Attempts to install the hardware into apropriate slot.
-/obj/item/modular_computer/proc/try_install_component(var/mob/living/user, var/obj/item/weapon/computer_hardware/H, var/found = 0)
+/obj/item/modular_computer/proc/regenerate_hardware_lists()
+	if(!completed_first_boot) // In case someone modifies a fresh computer
+		first_boot()
+		completed_first_boot = TRUE
+	if(hardware_installed.len > hardware_to_hardware_gid.len) // Hardware installed.
+		var/list/new_hardware = hardware_installed - hardware_to_hardware_gid // Generates a list of new hardware.
+		for(var/obj/item/weapon/computer_hardware/hardware in new_hardware)
+			var/new_hid
+			do
+				new_hid = "/dev/[hardware.port_type.mount]-[uppertext(generateRandomString(6))]" // Generate a new hid
+				// If everything went well, we'll get something like
+				// /dev/hata-6C8349
+			while(!hardware_gid_to_hardware[new_hid])
+			
+			if(!ports_occupied[hardware.port_type]) // No list present for that port.
+				ports_occupied[hardware.port_type] = list() // Add port type list if wasn't present.
+			
+			if(!hardware_by_base_type[hardware.base_type]) // No list for that basetype
+				hardware_by_base_type[hardware.base_type] = list() // Add base type list if wasn't present.
+			
+			ports_occupied[hardware.port_type] += hardware // Add the hardware to the port list.
+			hardware_by_base_type[hardware.base_type] += hardware // Add the hardware to the base type list.
+			hardware_gid_to_hardware[new_hid] = hardware // Add the hardware to it's gid.
+			hardware_to_hardware_gid[hardware] = new_hid // Add the gid to the hardware.
+	else // Hardware removed
+		var/list/removed_hardware = hardware_to_hardware_gid - hardware_installed
+		for(var/obj/item/weapon/computer_hardware/hardware in removed_hardware)
+			ports_occupied[hardware.port_type] -= hardware // Remove the hardware from the port list.
+			hardware_by_base_type[hardware.port_type] -= hardware // Remove the hardware from the base type list.
+			if(ports_occupied[hardware.port_type].len == 0)	// Port type is empty.
+				ports_occupied -= hardware.port_type // Remove port type if empty.
+			
+			if(hardware_by_base_type[hardware.base_type].len == 0)	// Base type is empty.
+				hardware_by_base_type -= hardware.base_type // Remove base type if empty.
+			
+			var/old_hid = hardware_to_hardware_gid[hardware] // Store the old hid.
+			hardware_gid_to_hardware -= old_hid // Remove the hardware from it's hid.
+			hardware_to_hardware_gid -= hardware // Remove the gid from it's hardware.
+	
+	post_regenerate_hardware_lists()
+
+/obj/item/modular_computer/proc/post_regenerate_hardware_lists()
+	max_idle_programs = 0
+	shutdown_chance = 0
+	var/list/processor_list = hardware_by_base_type[/obj/item/weapon/computer_hardware/processor_unit]
+	if(processor_list != null)
+		for(var/obj/item/weapon/computer_hardware/processor_unit/processor in processor_list)
+			max_idle_programs += processor.max_idle_programs
+			if(processor.damage >= processor.damage_malfunction)
+				if(processor.damage >= processor.damage_failure)
+					shutdown_chance += 100
+				else
+					shutdown_chance += processor.malfunction_probability
+		shutdown_chance = shutdown_chance / processor_list.len
+
+// Attempts to install the hardware into an appropriate slot.
+/obj/item/modular_computer/proc/try_install_component(var/mob/living/user, var/obj/item/weapon/computer_hardware/H)
+	if(!H)
+		return
+	var/installed = FALSE
+	if(H.hardware_size <= max_hardware_size)
+		to_chat(user, "This component is too large for \the [src].")
+		return FALSE
+	
 	if(!(H.usage_flags & hardware_flag))
 		to_chat(user, "This computer isn't compatible with [H].")
-		return
+		return FALSE
+	
+	if(ports_available[H.port_type]) // Do we have a port?
+		if(ports_occupied[H.port_type]) // Can we check a port amount?
+			if(ports_occupied[H.port_type].len + 1 > ports_available[H.port_type]) // Will the hardware overflow the available ports?
+				to_chat(user, "You can't find a free [H.port_type.name].")
+				return FALSE
 
-	// "USB" flash drive.
-	if(istype(H, /obj/item/weapon/computer_hardware/hard_drive/portable))
-		if(portable_drive)
-			to_chat(user, "This computer's portable drive slot is already occupied by \the [portable_drive].")
-			return
-		found = 1
-		portable_drive = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/hard_drive))
-		if(hard_drive)
-			to_chat(user, "This computer's hard drive slot is already occupied by \the [hard_drive].")
-			return
-		found = 1
-		hard_drive = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/network_card))
-		if(network_card)
-			to_chat(user, "This computer's network card slot is already occupied by \the [network_card].")
-			return
-		found = 1
-		network_card = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/nano_printer))
-		if(nano_printer)
-			to_chat(user, "This computer's nano printer slot is already occupied by \the [nano_printer].")
-			return
-		found = 1
-		nano_printer = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/card_slot))
-		if(card_slot)
-			to_chat(user, "This computer's card slot is already occupied by \the [card_slot].")
-			return
-		found = 1
-		card_slot = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/battery_module))
-		if(battery_module)
-			to_chat(user, "This computer's battery slot is already occupied by \the [battery_module].")
-			return
-		found = 1
-		battery_module = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/processor_unit))
-		if(processor_unit)
-			to_chat(user, "This computer's processor slot is already occupied by \the [processor_unit].")
-			return
-		found = 1
-		processor_unit = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/ai_slot))
-		if(ai_slot)
-			to_chat(user, "This computer's intellicard slot is already occupied by \the [ai_slot].")
-			return
-		found = 1
-		ai_slot = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/tesla_link))
-		if(tesla_link)
-			to_chat(user, "This computer's tesla link slot is already occupied by \the [tesla_link].")
-			return
-		found = 1
-		tesla_link = H
-	else if(istype(H, /obj/item/weapon/computer_hardware/scanner))
-		if(scanner)
-			to_chat(user, "This computer's scanner slot is already occupied by \the [scanner].")
-			return
-		found = 1
-		scanner = H
-		scanner.do_after_install(user, src)
-	if(found && user.unEquip(H, src))
-		to_chat(user, "You install \the [H] into \the [src]")
-		H.holder2 = src
-		update_verbs()
+		else // We can't check a port amount, but there might be space.
+			if(ports_available[H.port_type] == 0) // There shouldn't be a port declared if it's max size is 0, but just in case.
+				to_chat(user, "You can't find a [H.port_type.name]. <i>But you thought you saw one...</i>") // Snark/suggest something wrong.
+				return FALSE
+	
+	else // No port for that certain port type.
+		to_chat(user, "You can't find a [H.port_type.name].")
+		return FALSE
+	
+	user.unEquip(H, src) // Yoink
+	hardware_installed += H
+	regenerate_hardware_lists()
+	to_chat(user, "You install \the [H] into \the [src] with \the [H.port_type]")
+	H.on_insert(src)
+	update_verbs()
+	return TRUE
 
-// Uninstalls component. Found and Critical vars may be passed by parent types, if they have additional hardware.
-/obj/item/modular_computer/proc/uninstall_component(var/mob/living/user, var/obj/item/weapon/computer_hardware/H, var/found = 0, var/critical = 0)
-	if(portable_drive == H)
-		portable_drive = null
-		found = 1
-	if(hard_drive == H)
-		hard_drive = null
-		found = 1
-		critical = 1
-	if(network_card == H)
-		network_card = null
-		found = 1
-	if(nano_printer == H)
-		nano_printer = null
-		found = 1
-	if(card_slot == H)
-		card_slot = null
-		found = 1
-	if(battery_module == H)
-		battery_module = null
-		found = 1
-	if(processor_unit == H)
-		processor_unit = null
-		found = 1
-		critical = 1
-	if(ai_slot == H)
-		ai_slot = null
-		found = 1
-	if(tesla_link == H)
-		tesla_link = null
-		found = 1
-	if(scanner == H)
-		scanner.do_before_uninstall()
-		scanner = null
-		found = 1
-	if(found)
+// Removes components from a computer when provided a piece of hardware.
+/obj/item/modular_computer/proc/uninstall_component(var/mob/living/user, var/obj/item/weapon/computer_hardware/H)
+	if(!locate(H) in hardware_installed) // In the event two people are removing hardware.
 		if(user)
-			to_chat(user, "You remove \the [H] from \the [src].")
-		H.dropInto(loc)
-		H.holder2 = null
-		update_verbs()
-	if(critical && enabled)
-		if(user)
-			to_chat(user, "<span class='danger'>\The [src]'s screen freezes for few seconds and then displays an \"HARDWARE ERROR: Critical component disconnected. Please verify component connection and reboot the device. If the problem persists contact technical support for assistance.\" warning.</span>")
-		shutdown_computer()
-		update_icon()
-
-
-// Checks all hardware pieces to determine if name matches, if yes, returns the hardware piece, otherwise returns null
-/obj/item/modular_computer/proc/find_hardware_by_name(var/name)
-	if(portable_drive && (portable_drive.name == name))
-		return portable_drive
-	if(hard_drive && (hard_drive.name == name))
-		return hard_drive
-	if(network_card && (network_card.name == name))
-		return network_card
-	if(nano_printer && (nano_printer.name == name))
-		return nano_printer
-	if(card_slot && (card_slot.name == name))
-		return card_slot
-	if(battery_module && (battery_module.name == name))
-		return battery_module
-	if(processor_unit && (processor_unit.name == name))
-		return processor_unit
-	if(ai_slot && (ai_slot.name == name))
-		return ai_slot
-	if(tesla_link && (tesla_link.name == name))
-		return tesla_link
-	if(scanner && (scanner.name == name))
-		return scanner
-	return null
-
-// Returns list of all components
-/obj/item/modular_computer/proc/get_all_components()
-	var/list/all_components = list()
-	if(hard_drive)
-		all_components.Add(hard_drive)
-	if(network_card)
-		all_components.Add(network_card)
-	if(portable_drive)
-		all_components.Add(portable_drive)
-	if(nano_printer)
-		all_components.Add(nano_printer)
-	if(card_slot)
-		all_components.Add(card_slot)
-	if(battery_module)
-		all_components.Add(battery_module)
-	if(processor_unit)
-		all_components.Add(processor_unit)
-	if(ai_slot)
-		all_components.Add(ai_slot)
-	if(tesla_link)
-		all_components.Add(tesla_link)
-	if(scanner)
-		all_components.Add(scanner)
-	return all_components
+			to_chat(user, "You can not find \the [H] from in \the [src] to remove it.")
+			return FALSE
+	
+	hardware_installed -= H
+	H.eject(user, src)
+	
+	if(enabled)
+		switch(H.port_type)
+			if(PORT_CPU) // Removing CPUs regardless of how many installed should probably not be removed while the computer is running.
+				visible_message("<span class='danger'>\The [src]'s screen suddenly goes black and emits a few beeps!</span>", range = 1)
+				playsound(src.loc, 'sound/machines/twobeep.ogg', 75, 1)
+				if(user && prob(50)) // Also punish them.
+					H.damage += H.damage_malfunction
+					to_chat(user, "<span class='danger'>\The [src] makes a pop!</span>")
+				shutdown_computer()
+				update_icon()
+			if(PORT_STORAGE)
+				if(H == boot_device) // Equally not wise to remove the booting hard drive.
+					visible_message("<span class='danger'>\The [src]'s screen freezes for few seconds before filling with blackness as the line \"I/O ERROR\" repeats across before shutting down.</span>", range = 1)
+					shutdown_computer()
+					update_icon()
+	
+	return TRUE

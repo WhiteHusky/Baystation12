@@ -7,9 +7,15 @@
 	critical = 0
 	power_usage = 100
 	origin_tech = list(TECH_POWER = 2, TECH_DATA = 3)
+	base_type = /obj/item/weapon/computer_hardware/ai_slot
 	var/obj/item/weapon/aicard/stored_card
 	var/power_usage_idle = 100
 	var/power_usage_occupied = 2 KILOWATTS
+
+/obj/item/weapon/computer_hardware/ai_slot/examine(var/user)
+	. = ..()
+	if(stored_card)
+		to_chat(user, "There appears to be a card still inside it.")
 
 /obj/item/weapon/computer_hardware/ai_slot/proc/update_power_usage()
 	if(!stored_card || !stored_card.carded_ai)
@@ -27,12 +33,21 @@
 		if(!user.unEquip(W, src))
 			return
 		stored_card = W
+		to_chat(user, "You insert \the [W] into \the [src].")
 		update_power_usage()
+
 	if(isScrewdriver(W))
-		to_chat(user, "You manually remove \the [stored_card] from \the [src].")
-		stored_card.dropInto(loc)
-		stored_card = null
+		eject_contents(user, src)
 		update_power_usage()
+
+/obj/item/weapon/computer_hardware/ai_slot/eject_contents(var/mob/user, var/obj/ejecting_from)
+	if(user)
+		to_chat(user, "You remove \the [stored_card] from \the [ejecting_from].")
+		user.put_in_hands(stored_card)
+	else
+		stored_card.dropInto(ejecting_from.loc)
+
+	stored_card = null
 
 /obj/item/weapon/computer_hardware/ai_slot/Destroy()
 	if(holder2 && (holder2.ai_slot == src))

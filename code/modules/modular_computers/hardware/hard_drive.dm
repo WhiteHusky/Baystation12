@@ -5,6 +5,8 @@
 	icon_state = "hdd_normal"
 	hardware_size = 1
 	origin_tech = list(TECH_DATA = 1, TECH_ENGINEERING = 1)
+	port_type = PORT_STORAGE
+	base_type = /obj/item/weapon/computer_hardware/hard_drive
 	var/max_capacity = 128
 	var/used_capacity = 0
 	var/list/stored_files = list()		// List of stored files on this drive. DO NOT MODIFY DIRECTLY!

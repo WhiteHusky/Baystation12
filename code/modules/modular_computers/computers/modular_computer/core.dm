@@ -2,7 +2,12 @@
 	if(!enabled) // The computer is turned off
 		last_power_usage = 0
 		return 0
-
+	if(shutdown_chance && prob(shutdown_chance)) // Faulty processors
+		visible_message("<span class='danger'>\The [src]'s screen freezes for few seconds before turning blue and displaying \"SEGFAULT\".</span>" , range = 1)
+		bsod = 1
+		update_icon()
+		shutdown_computer()
+		return 0
 	if(damage > broken_damage)
 		shutdown_computer()
 		return 0
@@ -12,13 +17,17 @@
 		process_updates()
 		return 1
 
-	if(active_program && active_program.requires_ntnet && !get_ntnet_status(active_program.requires_ntnet_feature)) // Active program requires NTNet to run but we've just lost connection. Crash.
-		active_program.event_networkfailure(0)
-
+	if(active_program)
+		if(active_program.requires_ntnet && !get_ntnet_status(active_program.requires_ntnet_feature)) // Active program requires NTNet to run but we've just lost connection. Crash.
+			active_program.event_networkfailure(0)
+		else if(hardware_gid_to_hardware[active_program.disk_gid] == null) // Active program's disk has been removed. Crash.
+			active_program.event_diskfailure(0)
+	
 	for(var/datum/computer_file/program/P in idle_threads)
 		if(P.requires_ntnet && !get_ntnet_status(P.requires_ntnet_feature))
 			P.event_networkfailure(1)
-
+		else if(hardware_gid_to_hardware[P.disk_gid] == null)
+			P.event_diskfailure(1)
 	if(active_program)
 		if(active_program.program_state != PROGRAM_STATE_KILLED)
 			active_program.ntnet_status = get_ntnet_status()
@@ -58,7 +67,7 @@
 		var/datum/computer_file/program/prog_file = prog_type
 		if(initial(prog_file.usage_flags) & hardware_flag)
 			prog_file = new prog_file
-			hard_drive.store_file(prog_file)
+			boot_device.store_file(prog_file)
 
 /obj/item/modular_computer/Initialize()
 	START_PROCESSING(SSobj, src)
@@ -66,11 +75,10 @@
 	if(stores_pen && ispath(stored_pen))
 		stored_pen = new stored_pen(src)
 
+	hardware_installed = list()
 	install_default_hardware()
-	if(hard_drive)
-		install_default_programs()
-	if(scanner)
-		scanner.do_after_install(null, src)
+	// Code for installing programs and initializing hardware moved to first_boot()
+	
 	update_icon()
 	update_verbs()
 	update_name()
@@ -117,10 +125,15 @@
 		overlays.Add(icon_state_menu)
 
 /obj/item/modular_computer/proc/turn_on(var/mob/user)
+	if(!completed_first_boot) // Initialize hardware.
+		first_boot()
+		completed_first_boot = TRUE
 	if(bsod)
 		return
-	if(tesla_link)
-		tesla_link.enabled = 1
+	var/list/tesla_link_list = hardware_by_base_type[/obj/item/weapon/computer_hardware/tesla_link]
+	if(tesla_link_list != null)
+		for(var/obj/item/weapon/computer_hardware/tesla_link/tesla_link in tesla_link_list)
+			tesla_link.enabled = 1
 	var/issynth = issilicon(user) // Robots and AIs get different activation messages.
 	if(damage > broken_damage)
 		if(issynth)
@@ -128,7 +141,7 @@
 		else
 			to_chat(user, "You press the power button, but the computer fails to boot up, displaying variety of errors before shutting down again.")
 		return
-	if(processor_unit && (apc_power(0) || battery_power(0))) // Battery-run and charged or non-battery but powered by APC.
+	if(max_idle_programs && (apc_power(0) || battery_power(0))) // Battery-run and charged or non-battery but powered by APC.
 		if(issynth)
 			to_chat(user, "You send an activation signal to \the [src], turning it on")
 		else
@@ -153,15 +166,44 @@
 
 // Returns 0 for No Signal, 1 for Low Signal and 2 for Good Signal. 3 is for wired connection (always-on)
 /obj/item/modular_computer/proc/get_ntnet_status(var/specific_action = 0)
-	if(network_card)
-		return network_card.get_signal(specific_action)
-	else
-		return 0
+	var/calculated_status = 0
+	if(hardware_by_base_type[HARDWARE_NETWORK_CARD] != null)
+		for(var/obj/item/weapon/computer_hardware/network_card/card in hardware_by_base_type[HARDWARE_NETWORK_CARD])
+			var/card_net_signal = card.get_signal(specific_action)
+			calculated_status = (card_net_signal > calculated_status ? card_net_signal : calculated_status)
+	
+	return calculated_status
+
+/obj/item/modular_computer/proc/get_ntnet_speed(var/specific_action = 0)
+	var/total_speed = 0
+	if(hardware_by_base_type[HARDWARE_NETWORK_CARD] != null)
+		for(var/obj/item/weapon/computer_hardware/network_card/card in hardware_by_base_type[HARDWARE_NETWORK_CARD])
+			var/card_net_signal = card.get_signal(specific_action)
+			switch(card_net_signal)
+				if(1)
+					total_speed += NTNETSPEED_LOWSIGNAL
+				if(2)
+					total_speed += NTNETSPEED_HIGHSIGNAL
+				if(3)
+					total_speed += NTNETSPEED_ETHERNET
+
+	return total_speed
+
+/obj/item/modular_computer/proc/all_cards_banned()
+	var/total_banned
+	if(hardware_by_base_type[HARDWARE_NETWORK_CARD] != null)
+		for(var/obj/item/weapon/computer_hardware/network_card/card in hardware_by_base_type[HARDWARE_NETWORK_CARD])
+			if(card.is_banned())
+				total_banned++
+	return (total_banned == hardware_by_base_type[HARDWARE_NETWORK_CARD].len ? TRUE : FALSE)
 
 /obj/item/modular_computer/proc/add_log(var/text)
 	if(!get_ntnet_status())
 		return 0
-	return ntnet_global.add_log(text, network_card)
+	if(hardware_by_base_type[HARDWARE_NETWORK_CARD] != null)
+		for(var/obj/item/weapon/computer_hardware/network_card/card in hardware_by_base_type[HARDWARE_NETWORK_CARD])
+			ntnet_global.add_log(text, card)
+	return 
 
 /obj/item/modular_computer/proc/shutdown_computer(var/loud = 1)
 	kill_program(1)
@@ -192,7 +234,7 @@
 
 	// Autorun feature
 	if(!updates)
-		var/datum/computer_file/data/autorun = hard_drive ? hard_drive.find_file_by_name("autorun") : null
+		var/datum/computer_file/data/autorun = boot_device ? boot_device.find_file_by_name("autorun") : null
 		if(istype(autorun))
 			run_program(autorun.stored_data)
 
@@ -200,7 +242,7 @@
 		ui_interact(user)
 
 /obj/item/modular_computer/proc/minimize_program(mob/user)
-	if(!active_program || !processor_unit)
+	if(!active_program || !max_idle_programs)
 		return
 
 	idle_threads.Add(active_program)
@@ -212,11 +254,13 @@
 		ui_interact(user) // Re-open the UI on this computer. It should show the main screen now.
 
 
-/obj/item/modular_computer/proc/run_program(prog)
+/obj/item/modular_computer/proc/run_program(prog, var/obj/item/weapon/computer_hardware/hard_drive/using_hdd)
+	if(!using_hdd)
+		using_hdd = boot_device
 	var/datum/computer_file/program/P = null
 	var/mob/user = usr
-	if(hard_drive)
-		P = hard_drive.find_file_by_name(prog)
+	if(using_hdd)
+		P = using_hdd.find_file_by_name(prog)
 
 	if(!P || !istype(P)) // Program not found or it's not executable program.
 		to_chat(user, "<span class='danger'>\The [src]'s screen shows \"I/O ERROR - Unable to run [prog]\" warning.</span>")
@@ -232,7 +276,7 @@
 		update_icon()
 		return
 
-	if(idle_threads.len >= processor_unit.max_idle_programs+1)
+	if(idle_threads.len >= max_idle_programs + 1)
 		to_chat(user, "<span class='notice'>\The [src] displays a \"Maximal CPU load reached. Unable to run another program.\" error</span>")
 		return
 
@@ -245,6 +289,7 @@
 
 	if(P.run_program(user))
 		active_program = P
+		P.disk_gid = hardware_to_hardware_gid[using_hdd]
 		update_icon()
 	return 1
 
@@ -258,11 +303,16 @@
 
 /obj/item/modular_computer/proc/check_update_ui_need()
 	var/ui_update_needed = 0
-	if(battery_module)
-		var/batery_percent = battery_module.battery.percent()
-		if(last_battery_percent != batery_percent) //Let's update UI on percent change
+	var/list/battery_module_list = hardware_by_base_type[/obj/item/weapon/computer_hardware/battery_module]
+	if(battery_module_list != null)
+		var/battery_percent = 0
+		for(var/obj/item/weapon/computer_hardware/battery_module/battery_module in battery_module_list)
+			battery_percent += battery_module.battery.percent()
+		
+		battery_percent = battery_percent / battery_module_list.len // Get average
+		if(last_battery_percent != battery_percent) //Let's update UI on percent change
 			ui_update_needed = 1
-			last_battery_percent = batery_percent
+			last_battery_percent = battery_percent
 
 	if(stationtime2text() != last_world_time)
 		last_world_time = stationtime2text()
@@ -298,24 +348,34 @@
 		return ..()
 
 /obj/item/modular_computer/proc/set_autorun(program)
-	if(!hard_drive)
+	if(!boot_device)
 		return
-	var/datum/computer_file/data/autorun = hard_drive.find_file_by_name("autorun")
+	var/datum/computer_file/data/autorun = boot_device.find_file_by_name("autorun")
 	if(!istype(autorun))
 		autorun = new/datum/computer_file/data()
 		autorun.filename = "autorun"
 		autorun.stored_data = "[program]"
-		hard_drive.store_file(autorun)
+		boot_device.store_file(autorun)
+	else
+		autorun.stored_data = "[program]"
 
 /obj/item/modular_computer/GetIdCard()
-	if(card_slot && card_slot.can_broadcast && istype(card_slot.stored_card))
-		return card_slot.stored_card
+	var/list/cards = get_all_cards_broadcastable()
+	if(cards.len)
+		return pick(cards) // Pick a card. Any card.
 
 /obj/item/modular_computer/proc/update_name()
 
-/obj/item/modular_computer/get_cell()
-	if(battery_module)
-		return battery_module.get_cell()
+/obj/item/modular_computer/get_cell() // Something is trying to charge. Probably.
+	var/list/battery_modules = get_uncharged_battery_modules()
+	var/obj/item/weapon/computer_hardware/battery_module/battery_module
+	if(battery_modules.len)
+		battery_module = pick(battery_modules)
+		return battery_module.battery // Just keep giving random uncharged batteries.
+	else // No more uncharged batteries. Give a charged one to appease whatever device.
+		battery_module = get_any_charged_battery_module()
+		if(battery_module)
+			return battery_module.battery
 
 /obj/item/modular_computer/proc/has_terminal(mob/user)
 	for(var/datum/terminal/terminal in terminals)
@@ -347,3 +407,16 @@
 
 	if(update_postshutdown)
 		shutdown_computer()
+
+/obj/item/modular_computer/proc/first_boot()
+	if(hardware_installed.len) // Did we even install hardware?
+		regenerate_hardware_lists() // Populate the lists.
+		var/list/hdd_list = hardware_by_base_type[/obj/item/weapon/computer_hardware/hard_drive]
+		if(hdd_list != null) // If there is a list, then there is at least one item.
+			boot_device = hdd_list[1]
+			install_default_programs()
+		
+		var/list/scanner_list = hardware_by_base_type[/obj/item/weapon/computer_hardware/scanner]
+		if(scanner_list != null)
+			for(var/obj/item/weapon/computer_hardware/scanner/scanner in scanner_list)
+				scanner.do_after_install(null, src)

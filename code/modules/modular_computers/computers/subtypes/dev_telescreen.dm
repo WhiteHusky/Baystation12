@@ -6,6 +6,14 @@
 	icon_state_unpowered = "telescreen"
 	icon_state_menu = "menu"
 	hardware_flag = PROGRAM_TELESCREEN
+	ports_available = list(
+		PORT_CPU = 1,
+		PORT_POWER = 2,
+		PORT_STORAGE = 2,
+		PORT_CARD_READER = 1,
+		PORT_EXPANSION = 4,
+		PORT_EXTERNAL = 4
+	)
 	anchored = TRUE
 	density = 0
 	base_idle_power_usage = 75

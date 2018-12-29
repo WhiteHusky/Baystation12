@@ -7,6 +7,8 @@
 	critical = 1
 	malfunction_probability = 1
 	origin_tech = list(TECH_POWER = 1, TECH_ENGINEERING = 1)
+	port_type = PORT_POWER
+	base_type = /obj/item/weapon/computer_hardware/battery_module
 	var/battery_rating = 75
 	var/obj/item/weapon/cell/battery = null
 

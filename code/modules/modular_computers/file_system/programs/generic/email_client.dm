@@ -11,6 +11,7 @@
 	var/stored_login = ""
 	var/stored_password = ""
 	usage_flags = PROGRAM_ALL
+	uses_net_speed = TRUE
 
 	nanomodule_path = /datum/nano_module/email_client
 
@@ -295,7 +296,7 @@
 	if(download_progress >= downloading.size)
 		var/obj/item/modular_computer/MC = nano_host()
 		if(!istype(MC) || !MC.hard_drive || !MC.hard_drive.check_functionality())
-			error = "Error uploading file. Are you using a functional and NTOSv2-compliant device?"
+			error = "Error uploading file. Are you using a functional and DACOSv2-compliant device?"
 			downloading = null
 			download_progress = 0
 			return 1
@@ -487,7 +488,7 @@
 		var/obj/item/modular_computer/MC = nano_host()
 
 		if(!istype(MC) || !MC.hard_drive || !MC.hard_drive.check_functionality())
-			error = "Error exporting file. Are you using a functional and NTOS-compliant device?"
+			error = "Error exporting file. Are you using a functional and DACOS-compliant device?"
 			return 1
 
 		var/filename = sanitize(input(user,"Please specify file name:", "Message export"), 100)
@@ -510,7 +511,7 @@
 		msg_attachment = null
 
 		if(!istype(MC) || !MC.hard_drive || !MC.hard_drive.check_functionality())
-			error = "Error uploading file. Are you using a functional and NTOSv2-compliant device?"
+			error = "Error uploading file. Are you using a functional and DACOSv2-compliant device?"
 			return 1
 
 		var/list/filenames = list()
@@ -524,7 +525,7 @@
 			return 1
 
 		if(!istype(MC) || !MC.hard_drive || !MC.hard_drive.check_functionality())
-			error = "Error uploading file. Are you using a functional and NTOSv2-compliant device?"
+			error = "Error uploading file. Are you using a functional and DACOSv2-compliant device?"
 			return 1
 
 		for(var/datum/computer_file/CF in MC.hard_drive.stored_files)
@@ -550,7 +551,7 @@
 			return 1
 		var/obj/item/modular_computer/MC = nano_host()
 		if(!istype(MC) || !MC.hard_drive || !MC.hard_drive.check_functionality())
-			error = "Error downloading file. Are you using a functional and NTOSv2-compliant device?"
+			error = "Error downloading file. Are you using a functional and DACOSv2-compliant device?"
 			return 1
 
 		downloading = current_message.attachment.clone()
