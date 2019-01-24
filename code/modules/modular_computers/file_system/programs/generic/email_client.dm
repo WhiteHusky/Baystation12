@@ -351,7 +351,7 @@
 		return 1
 
 	if(href_list["edit_title"])
-		var/newtitle = sanitize(input(user,"Enter title for your message:", "Message title", msg_title), 100)
+		var/newtitle = sanitize(input(user,"Enter title for your message:", "Message title", msg_title), MAX_EMAIL_SUBJECT_LEN)
 		if(newtitle)
 			msg_title = newtitle
 		return 1
@@ -361,7 +361,7 @@
 		var/oldtext = html_decode(msg_body)
 		oldtext = replacetext(oldtext, "\[br\]", "\n")
 
-		var/newtext = sanitize(replacetext(input(usr, "Enter your message. You may use most tags from paper formatting", "Message Editor", oldtext) as message|null, "\n", "\[br\]"), 20000)
+		var/newtext = sanitize(replacetext(input(usr, "Enter your message. You may use most tags from paper formatting", "Message Editor", oldtext) as message|null, "\n", "\[br\]"), MAX_EMAIL_BODY_LEN)
 		if(newtext)
 			msg_body = newtext
 		return 1

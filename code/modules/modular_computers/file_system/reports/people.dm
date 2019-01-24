@@ -1,14 +1,127 @@
+// TODO: REMOVE CALLBACKS AND USE WHATEVER AFTERTHOUGHT SAID
+/*
+[11:56 PM] afterthought: if I were you I'd make a datum that does two things: manages data for the nanoui interface and provides the template, and then fields any Topic callsrouted to it (and stores relevant internal state, etc)
+[11:56 PM] afterthought: then in program.ui_interact, you call this thing's data proc and use it's template when in delegate-to-handler state
+[11:57 PM] afterthought: and in program.Topic() you do the usual checks, intercept any flag for the delegate, and send the Topic call there
+[11:58 PM] afterthought: problem with just raw nano_modules for IC stuff is that you need to check interaction handling somewhere (which is potentially pretty hard)
+[11:58 PM] afterthought: and computers do all the work for you
+*/
 //Field with people in it; has some communications procs available to it.
-/datum/report_field/people/proc/send_email(mob/user)
+/datum/report_field/people/proc/send_email(mob/user, datum/nanoui/master_ui, datum/callback/cb)
+	// master_ui is the UI who started this, thus it'll handle visibility.
 	if(!get_value())
+		cb.Invoke(user, src.owner)
 		return //No one to send to anyway.
-	var/subject = sanitize(input(user, "Email Subject:", "Document Email", "Report Submission: [owner.display_name()]") as null|text)
-	var/body = sanitize(replacetext(input(user, "Email Body:", "Document Email", "Please see the attached document.") as null|message, "\n", "\[br\]"), MAX_PAPER_MESSAGE_LEN)
-	var/attach_report = (alert(user, "Do you wish to attach [owner.display_name()]?","Document Email", "Yes.", "No.") == "Yes.") ? 1 : 0
-	if(alert(user, "Are you sure you want to send this email?","Document Email", "Yes.", "No.") == "No.")
-		return
-	if(perform_send(subject, body, attach_report))
-		to_chat(user, "<span class='notice'>The email has been sent.</span>")
+	var/datum/nano_module/send_report_prompt/send_prompt = new(src, cb = cb)
+	send_prompt.ui_interact(user, master_ui = master_ui)
+
+// Prompting a bunch of alert boxes is probably not fun. So a nano ui filled with the questions should make it better and pretty.
+// Also what is over engineering
+/datum/nano_module/send_report_prompt
+	name = "Send Report"
+	var/datum/report_field/people/field = null
+	var/datum/callback/cb = null
+	var/subject = null
+	var/body = null
+	var/attach_report = TRUE
+
+/datum/nano_module/send_report_prompt/New(datum/host, topic_manager, datum/callback/cb)
+	field = host
+	src.cb = cb
+	..()
+	reset()
+
+/datum/nano_module/send_report_prompt/proc/reset()
+	// Resets everything to defaults.
+	subject = "Report Submission: [field.owner.display_name()]"
+	body = "Please see the attached document."
+	attach_report = initial(attach_report)
+
+/datum/nano_module/send_report_prompt/ui_interact(mob/user, ui_key = "main", datum/nanoui/ui = null, force_open = 1, master_ui = null, datum/topic_state/state = GLOB.interactive_state)
+	var/list/data = initial_data()
+	data["recipients"] = field.get_value()
+	data["subject"] = subject
+	data["body"] = pencode2html(body)
+	data["attach_report"] = attach_report
+	ui = SSnano.try_update_ui(user, src, ui_key, ui, data, force_open)
+	if(!ui)
+		ui = new(user, src, ui_key, "send_report_prompt.tmpl", "Sending Report: [field.owner.display_name()]", 800, 700, master_ui = master_ui, state = state)
+		ui.set_initial_data(data)
+		ui.open()
+
+/datum/nano_module/send_report_prompt/Topic(ref, href_list, var/datum/topic_state/state = GLOB.interactive_state)
+	var/user = usr
+	if(href_list["edit_subject"])
+		// Edit subject and respect max length.
+		var/new_subject = sanitize(replacetext(input(user, "Email Subject:", "Enter title for your message:", subject) as null|text, "\n", "\[br\]"), MAX_EMAIL_SUBJECT_LEN)
+		if(new_subject)
+			subject = new_subject
+
+		return TOPIC_REFRESH
+
+	if(href_list["edit_body"])
+		// Edit body and respect max length.
+		var/old_body = replacetext(html_decode(body), "\[br\]", "\n")
+		var/new_body = sanitize(replacetext(input(user, "Email Body:", "Enter your message. You may use most tags from paper formatting", old_body) as null|message, "\n", "\[br\]"), MAX_EMAIL_BODY_LEN)
+		if(new_body)
+			body = new_body
+
+		return TOPIC_REFRESH
+
+	if(href_list["toggle_attach_report"])
+		// Toggles if the report is attached.
+		attach_report = !attach_report
+		return TOPIC_REFRESH
+	
+	if(href_list["append_report"])
+		// Appends the report to the subject while respecting the max email body length.
+		var/new_body = sanitize(html_decode(body + field.owner.generate_pencode(get_access(user), no_html = TRUE)), MAX_EMAIL_BODY_LEN)
+		if(new_body)
+			body = new_body
+
+		return TOPIC_REFRESH
+	
+	if(href_list["template_reset"])
+		// Resets the template to defaults.
+		reset()
+		return TOPIC_REFRESH
+	
+	if(href_list["template_report_body_only"])
+		// Template for attaching the report as part of the body.
+		var/new_body = sanitize(html_decode(field.owner.generate_pencode(get_access(user), no_html = TRUE)), MAX_EMAIL_BODY_LEN)
+		if(new_body)
+			body = new_body
+		
+		attach_report = FALSE
+		return TOPIC_REFRESH
+	
+	if(href_list["template_report_body_and_attached"])
+		// Template for attaching the report as part of the body and as a .RPT.
+		var/new_body = sanitize(html_decode(field.owner.generate_pencode(get_access(user), no_html = TRUE)), MAX_EMAIL_BODY_LEN)
+		if(new_body)
+			body = new_body
+		
+		attach_report = TRUE
+		return TOPIC_REFRESH
+	
+	if(href_list["template_report_attached_only"])
+		// Similar to reset(), but avoids the subject.
+		body = "Please see the attached document."
+		attach_report = TRUE
+		return TOPIC_REFRESH
+	
+	if(href_list["send_report"])
+		// Email the report.
+		if(field.perform_send(subject, body, attach_report))
+			to_chat(user, SPAN_NOTICE("The email has been sent."))
+			if(cb)
+				cb.Invoke(user, field.owner)
+			SSnano.get_open_ui(user, src, "main").close() // Close the nano ui since it's no longer needed.
+
+/datum/nano_module/send_report_prompt/Destroy()
+	field = null
+	cb = null
+	. = ..()
 
 //Helper procs.
 /datum/report_field/people/proc/perform_send(subject, body, attach_report)

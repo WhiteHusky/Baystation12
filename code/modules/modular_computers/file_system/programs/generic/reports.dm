@@ -130,10 +130,7 @@
 			return 1
 		if(!selected_report.verify_access_edit(get_access(user)))
 			return 1
-		if(selected_report.submit(user))
-			to_chat(user, "The [src] has been submitted.")
-			if(alert(user, "Would you like to save a copy?","Save Report", "Yes.", "No.") == "Yes.")
-				save_report(user)
+		selected_report.submit(user, SSnano.get_open_ui(user, src, "main"), CALLBACK(src, .proc/submit_callback))
 		return 1
 	if(href_list["discard"])
 		if(!selected_report)
@@ -187,6 +184,11 @@
 	if(href_list["home"])
 		switch_state(REPORTS_VIEW)
 		return 1
+
+/datum/nano_module/program/reports/proc/submit_callback(mob/user, datum/computer_file/report/submitted_report)
+	to_chat(user, SPAN_NOTICE("\The [submitted_report.display_name()] has been submitted."))
+	if(alert(user, "Would you like to save a copy?","Save Report", "Yes.", "No.") == "Yes.")
+		save_report(user)
 
 #undef REPORTS_VIEW
 #undef REPORTS_DOWNLOAD

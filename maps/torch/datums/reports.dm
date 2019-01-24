@@ -476,6 +476,7 @@
 	available_on_ntnet = 1
 
 /datum/computer_file/report/recipient/sol/audit/generate_fields()
+	..()
 	add_field(/datum/report_field/date, "Date")
 	add_field(/datum/report_field/time, "Time")
 	add_field(/datum/report_field/simple_text, "Name of Department")
@@ -492,6 +493,7 @@
 	available_on_ntnet = 1
 
 /datum/computer_file/report/recipient/sol/audit/generate_fields()
+	..()
 	add_field(/datum/report_field/date, "Date")
 	add_field(/datum/report_field/time, "Time")
 	add_field(/datum/report_field/people/from_manifest, "Crewman Involved in Incident")
@@ -507,6 +509,7 @@
 	available_on_ntnet = 1
 
 /datum/computer_file/report/recipient/sol/audit/generate_fields()
+	..()
 	var/datum/report_field/temp_field
 	add_field(/datum/report_field/date, "Date")
 	add_field(/datum/report_field/time, "Time")

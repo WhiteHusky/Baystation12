@@ -55,13 +55,15 @@
 #define WAIT_FINISH  4
 
 // Setting this much higher than 1024 could allow spammers to DOS the server easily.
-#define MAX_MESSAGE_LEN       1024
-#define MAX_PAPER_MESSAGE_LEN 6144
-#define MAX_BOOK_MESSAGE_LEN  18432
-#define MAX_LNAME_LEN         64
-#define MAX_NAME_LEN          26
-#define MAX_DESC_LEN          128
-#define MAX_TEXTFILE_LENGTH 128000		// 512GQ file
+#define MAX_MESSAGE_LEN			1024
+#define MAX_PAPER_MESSAGE_LEN	6144
+#define MAX_BOOK_MESSAGE_LEN	18432
+#define MAX_EMAIL_SUBJECT_LEN	100
+#define MAX_EMAIL_BODY_LEN		20000
+#define MAX_LNAME_LEN			64
+#define MAX_NAME_LEN          	26
+#define MAX_DESC_LEN          	128
+#define MAX_TEXTFILE_LENGTH 	128000		// 512GQ file
 
 // Event defines.
 #define EVENT_LEVEL_MUNDANE  1

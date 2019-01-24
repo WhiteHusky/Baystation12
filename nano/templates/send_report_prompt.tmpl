@@ -1,0 +1,79 @@
+{{##def.submit:
+<div class='item'>
+    <div class='itemLabel'>
+        Submit
+    </div>
+    <div class="itemContent">
+        {{:helper.link('Send Email', 'mail-closed', {'send_report' : 1})}}
+    </div>
+</div>
+#}}
+<div class='item'>
+    <div class='itemLabel'>
+        Recipients
+    </div>
+    <div class="itemContent">
+        {{:data.recipients}}
+    </div>
+</div>
+<div class='item'>
+    <div class='itemLabel'>
+        {{:helper.link('Subject', 'pencil', {'edit_subject' : 1})}}
+    </div>
+    <div class="itemContent">
+        <div class="statusDisplayComm" style="width:100%;min-height:1.7em;padding-bottom: 0;">
+            {{:data.subject}}
+        </div>
+    </div>
+</div>
+<div class='item'>
+    <div class='itemLabel'>
+        Templates
+    </div>
+    <div class="itemContent">
+        {{:helper.link('Apply report to body and attach .RPT', 'document', {'template_report_body_and_attached': 1})}}
+    </div>
+    <div class='itemLabel'>
+        |
+    </div>
+    <div class="itemContent">
+        {{:helper.link('Apply report to body only', 'document', {'template_report_body_only': 1})}}
+    </div>
+    <div class='itemLabel'>
+        |
+    </div>
+    <div class="itemContent">
+        {{:helper.link('Attach .RPT only', 'document', {'template_report_attached_only': 1})}}
+    </div>
+    <div class='itemLabel'>
+        |
+    </div>
+    <div class="itemContent">
+        {{:helper.link('Reset', 'arrowreturn-1-w', {'template_reset': 1})}}
+    </div>
+</div>
+{{#def.submit}}
+<div class='item'>
+    <div class='itemLabel'>
+        {{:helper.link('Body', 'pencil', {'edit_body' : 1})}}
+    </div>
+    <div class="itemContent">
+        <div class="statusDisplayComm" style="width:100%;min-height:1.7em;padding-bottom: 0;">
+            {{:data.body}}
+        </div>
+        {{:helper.link('Append report to body', 'arrowstop-1-s', {'append_report': 1})}}
+    </div>
+</div>
+<div class='item'>
+    <div class='itemLabel'>
+        {{:helper.link('Attach Report', 'pencil', {'toggle_attach_report' : 1})}}
+    </div>
+    <div class="itemContent">
+        {{if data.attach_report == 1}}
+            Report will be attached to email.
+        {{else}}
+            Report will not be attached to email.
+        {{/if}}
+    </div>
+</div>
+{{#def.submit}}

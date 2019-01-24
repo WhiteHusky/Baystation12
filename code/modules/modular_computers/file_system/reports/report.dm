@@ -70,7 +70,7 @@ If the override option is set to 0, the access supplied will instead be added as
 /datum/computer_file/report/proc/generate_fields()
 	return
 
-/datum/computer_file/report/proc/submit(mob/user)
+/datum/computer_file/report/proc/submit(mob/user, datum/nanoui/master_ui, datum/callback/cb, suppress_callback)
 	if(!istype(user))
 		return 0
 	for(var/datum/report_field/field in fields)
@@ -80,6 +80,8 @@ If the override option is set to 0, the access supplied will instead be added as
 	creator = user.name
 	file_time = time_stamp()
 	rename_file(file_time)
+	if(!suppress_callback && cb)
+		cb.Invoke(user, src)
 	return 1
 
 /datum/computer_file/report/proc/rename_file(append)
@@ -174,6 +176,7 @@ no_html will strip any html, possibly killing useful formatting in the process.
 /datum/computer_file/report/recipient/generate_fields()
 	recipients = add_field(/datum/report_field/people/list_from_manifest/, "Send Copies To")
 
-/datum/computer_file/report/recipient/submit(mob/user)
+/datum/computer_file/report/recipient/submit(mob/user, datum/nanoui/master_ui, datum/callback/cb, suppress_callback = TRUE)
+																		  // Don't handle the callback with the parent proc.
 	if((. = ..()))
-		recipients.send_email(user)
+		recipients.send_email(user, master_ui, cb)
